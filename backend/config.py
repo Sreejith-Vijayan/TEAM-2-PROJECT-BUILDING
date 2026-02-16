@@ -1,0 +1,1 @@
+DATABASE_URL = "postgresql://thprojbuild:Sreejith2005@localhost/lostfound"
