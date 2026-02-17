@@ -30,6 +30,10 @@
             <a href="javascript:history.back()" style="color: var(--text-muted);">&larr; Back to List</a>
         </div>
 
+        <div id="loading" class="text-center" style="padding: 4rem 0;">
+            <p>Loading item details...</p>
+        </div>
+
         <div id="item-container" class="card" style="max-width: 800px; margin: 0 auto; display: none;">
             <div class="grid grid-cols-2" style="grid-template-columns: 1fr 1fr; gap: 2rem;">
 
@@ -98,20 +102,33 @@
 
         const container = document.getElementById('item-container');
         const notFound = document.getElementById('not-found');
+        const loading = document.getElementById('loading');
 
-        if (itemId) {
-            const item = getItemById(itemId);
+        async function loadItemDetails() {
+            if (!itemId) {
+                loading.style.display = 'none';
+                notFound.style.display = 'block';
+                return;
+            }
 
-            if (item) {
+            try {
+                const item = await getItemById(itemId);
+
+                if (!item) {
+                    loading.style.display = 'none';
+                    notFound.style.display = 'block';
+                    return;
+                }
+
                 // Populate Data
                 document.getElementById('item-title').textContent = item.title;
                 document.getElementById('item-date').textContent = 'Reported on ' + item.date;
                 document.getElementById('item-location').textContent = item.location;
                 document.getElementById('item-description').textContent = item.description;
 
-                // Image (Fallback if empty)
+                // Image
                 const img = document.getElementById('item-image');
-                img.src = item.image || 'https://via.placeholder.com/400x300?text=No+Image';
+                img.src = getPhotoUrl(item);
 
                 // Badge
                 const badge = document.getElementById('item-badge');
@@ -130,18 +147,20 @@
                 }
 
                 // Show Container
+                loading.style.display = 'none';
                 container.style.display = 'block';
 
                 // Responsive Grid fix for mobile
                 if (window.innerWidth < 768) {
                     container.querySelector('.grid').style.gridTemplateColumns = '1fr';
                 }
-            } else {
+            } catch (e) {
+                loading.style.display = 'none';
                 notFound.style.display = 'block';
             }
-        } else {
-            notFound.style.display = 'block';
         }
+
+        loadItemDetails();
     </script>
 </body>
 

@@ -70,7 +70,7 @@
 
     <!-- Items Grid -->
     <div class="grid grid-cols-2" id="items-grid">
-      <!-- Items injected here -->
+      <p class="text-muted">Loading...</p>
     </div>
 
     <div id="no-results" class="text-center text-muted" style="display: none; padding: 2rem;">
@@ -93,7 +93,7 @@
     const searchInput = document.getElementById('searchInput');
 
     let currentFilter = 'all';
-    let searchQuery = '';
+    let allItems = [];
 
     // Check URL params for initial filter
     const urlParams = new URLSearchParams(window.location.search);
@@ -110,8 +110,17 @@
       });
     }
 
+    async function loadItems() {
+      try {
+        allItems = await getAllItems();
+        renderItems();
+      } catch (e) {
+        grid.innerHTML = '<p class="text-muted">Could not load items. Is the backend running?</p>';
+      }
+    }
+
     function renderItems() {
-      let items = getItemsByType('all');
+      let items = [...allItems];
 
       // Apply Type Filter
       if (currentFilter !== 'all') {
@@ -119,6 +128,7 @@
       }
 
       // Apply Search Filter
+      const searchQuery = searchInput.value.trim();
       if (searchQuery) {
         const lowerQuery = searchQuery.toLowerCase();
         items = items.filter(item =>
@@ -168,13 +178,12 @@
       });
     });
 
-    searchInput.addEventListener('input', (e) => {
-      searchQuery = e.target.value;
+    searchInput.addEventListener('input', () => {
       renderItems();
     });
 
-    // Initial Render
-    renderItems();
+    // Initial Load
+    loadItems();
   </script>
 </body>
 

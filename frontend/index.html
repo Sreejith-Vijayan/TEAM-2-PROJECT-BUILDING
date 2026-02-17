@@ -52,7 +52,7 @@
                     Found</a>
             </div>
             <div class="grid grid-cols-3" id="found-items-container">
-                <!-- Items will be injected here by JS -->
+                <p class="text-muted">Loading...</p>
             </div>
         </section>
 
@@ -64,7 +64,7 @@
                     Missing</a>
             </div>
             <div class="grid grid-cols-3" id="lost-items-container">
-                <!-- Items will be injected here by JS -->
+                <p class="text-muted">Loading...</p>
             </div>
         </section>
 
@@ -80,35 +80,43 @@
     <script src="script.js"></script>
     <script>
         // Load recent items for dashboard
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const foundContainer = document.getElementById('found-items-container');
             const lostContainer = document.getElementById('lost-items-container');
 
-            const foundItems = getItemsByType('found').slice(0, 3); // Top 3
-            const lostItems = getItemsByType('lost').slice(0, 3);   // Top 3
+            try {
+                const foundItems = await getItemsByType('found');
+                const lostItems = await getItemsByType('lost');
 
-            function createCard(item) {
-                const badgeClass = item.type === 'lost' ? 'badge-lost' : 'badge-found';
-                return `
-                    <div class="card">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="badge ${badgeClass}">${item.type.toUpperCase()}</span>
-                            <span style="font-size: 0.875rem; color: var(--text-muted);">${item.date}</span>
+                const recentFound = foundItems.slice(0, 3);
+                const recentLost = lostItems.slice(0, 3);
+
+                function createCard(item) {
+                    const badgeClass = item.type === 'lost' ? 'badge-lost' : 'badge-found';
+                    return `
+                        <div class="card">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="badge ${badgeClass}">${item.type.toUpperCase()}</span>
+                                <span style="font-size: 0.875rem; color: var(--text-muted);">${item.date}</span>
+                            </div>
+                            <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">${item.title}</h3>
+                            <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">
+                                Location: <strong>${item.location}</strong>
+                            </p>
+                            <a href="item-details.html?id=${item.id}" class="btn btn-outline btn-block">View Details</a>
                         </div>
-                        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">${item.title}</h3>
-                        <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">
-                            Location: <strong>${item.location}</strong>
-                        </p>
-                        <a href="item-details.html?id=${item.id}" class="btn btn-outline btn-block">View Details</a>
-                    </div>
-                `;
+                    `;
+                }
+
+                foundContainer.innerHTML = recentFound.map(createCard).join('');
+                lostContainer.innerHTML = recentLost.map(createCard).join('');
+
+                if (recentFound.length === 0) foundContainer.innerHTML = '<p class="text-muted">No found items reported yet.</p>';
+                if (recentLost.length === 0) lostContainer.innerHTML = '<p class="text-muted">No lost items reported yet.</p>';
+            } catch (e) {
+                foundContainer.innerHTML = '<p class="text-muted">Could not load items. Is the backend running?</p>';
+                lostContainer.innerHTML = '<p class="text-muted">Could not load items. Is the backend running?</p>';
             }
-
-            foundContainer.innerHTML = foundItems.map(createCard).join('');
-            lostContainer.innerHTML = lostItems.map(createCard).join('');
-
-            if (foundItems.length === 0) foundContainer.innerHTML = '<p class="text-muted">No found items reported yet.</p>';
-            if (lostItems.length === 0) lostContainer.innerHTML = '<p class="text-muted">No lost items reported yet.</p>';
         });
     </script>
 </body>

@@ -59,14 +59,66 @@
     </div>
 
     <script>
-        function handleLogin(e) {
+        const API_BASE = 'http://localhost:5000';
+        let isRegister = false;
+
+        async function handleLogin(e) {
             e.preventDefault();
             const email = document.getElementById('email').value;
-            if (email) {
-                // Mock login success using simple alert or redirection
-                // In a real app, this would hit an API
-                localStorage.setItem('user_email', email);
-                window.location.href = 'index.html';
+            const password = document.getElementById('password').value;
+            const endpoint = isRegister ? '/auth/register' : '/auth/login';
+
+            try {
+                const res = await fetch(`${API_BASE}${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    alert(data.detail || 'Authentication failed');
+                    return;
+                }
+
+                if (isRegister) {
+                    alert('Registration successful! Please login.');
+                    toggleMode(); // Switch back to login
+                } else {
+                    // Login success
+                    localStorage.setItem('access_token', data.access_token);
+                    localStorage.setItem('user_email', data.user);
+                    window.location.href = 'index.html';
+                }
+            } catch (err) {
+                console.error(err);
+                alert('An error occurred. Is the server running?');
+            }
+        }
+
+        // Toggle between Login and Register
+        const title = document.querySelector('h2');
+        const submitBtn = document.querySelector('button[type="submit"]');
+        const toggleText = document.querySelector('.text-center.mt-4 p');
+
+        // Find the "Register" link and attach click handler
+        const toggleLink = toggleText.querySelector('a');
+        toggleLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleMode();
+        });
+
+        function toggleMode() {
+            isRegister = !isRegister;
+            if (isRegister) {
+                title.textContent = 'Create Account';
+                submitBtn.textContent = 'Register';
+                toggleText.innerHTML = `Already have an account? <a href="#" onclick="toggleMode(); return false;" style="color: var(--primary); font-weight: 600;">Login</a>`;
+            } else {
+                title.textContent = 'Welcome Back';
+                submitBtn.textContent = 'Login';
+                toggleText.innerHTML = `Don't have an account? <a href="#" onclick="toggleMode(); return false;" style="color: var(--primary); font-weight: 600;">Register</a>`;
             }
         }
     </script>

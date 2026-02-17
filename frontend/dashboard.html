@@ -44,7 +44,7 @@
         </div>
 
         <div class="grid grid-cols-1" id="my-items-grid">
-            <!-- Items injected here -->
+            <p class="text-muted">Loading your items...</p>
         </div>
 
         <div id="no-results" class="text-center text-muted" style="display: none; padding: 4rem;">
@@ -57,62 +57,67 @@
     <script>
         const grid = document.getElementById('my-items-grid');
         const noResults = document.getElementById('no-results');
-        const myItems = getItemsByUser(CURRENT_USER);
 
-        function renderMyItems() {
-            if (myItems.length === 0) {
-                grid.style.display = 'none';
-                noResults.style.display = 'block';
-                return;
-            }
+        async function renderMyItems() {
+            try {
+                const myItems = await getItemsByUser(CURRENT_USER);
 
-            grid.innerHTML = myItems.map(item => {
-                const badgeClass = item.status === 'resolved' ? 'badge-found' : (item.type === 'lost' ? 'badge-lost' : 'badge-found');
-                const badgeText = item.status === 'resolved' ? 'RESOLVED' : item.type.toUpperCase();
-                const isResolved = item.status === 'resolved';
+                if (myItems.length === 0) {
+                    grid.style.display = 'none';
+                    noResults.style.display = 'block';
+                    return;
+                }
 
-                return `
-                    <div class="card flex flex-col md:flex-row gap-4 items-start">
-                        <img src="${item.image || 'https://via.placeholder.com/150'}" style="width: 150px; height: 150px; object-fit: cover; border-radius: var(--radius);">
-                        
-                        <div style="flex: 1;">
-                            <div class="flex justify-between items-start mb-2">
-                                <h3 style="font-size: 1.5rem;">${item.title}</h3>
-                                <span class="badge ${badgeClass}">${badgeText}</span>
-                            </div>
-                            <p style="color: var(--text-muted); margin-bottom: 0.5rem;">Reported on ${item.date} • ${item.location}</p>
-                            <p style="margin-bottom: 1rem;">${item.description}</p>
+                grid.innerHTML = myItems.map(item => {
+                    const badgeClass = item.status === 'resolved' ? 'badge-found' : (item.type === 'lost' ? 'badge-lost' : 'badge-found');
+                    const badgeText = item.status === 'resolved' ? 'RESOLVED' : item.type.toUpperCase();
+                    const isResolved = item.status === 'resolved';
+
+                    return `
+                        <div class="card flex flex-col md:flex-row gap-4 items-start">
+                            <img src="${getPhotoUrl(item)}" style="width: 150px; height: 150px; object-fit: cover; border-radius: var(--radius);">
                             
-                            <div class="flex gap-4 items-center">
-                                <a href="item-details.html?id=${item.id}" class="text-primary hover:underline">View Public Page</a>
+                            <div style="flex: 1;">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 style="font-size: 1.5rem;">${item.title}</h3>
+                                    <span class="badge ${badgeClass}">${badgeText}</span>
+                                </div>
+                                <p style="color: var(--text-muted); margin-bottom: 0.5rem;">Reported on ${item.date} • ${item.location}</p>
+                                <p style="margin-bottom: 1rem;">${item.description}</p>
                                 
-                                <div style="margin-left: auto;">
-                                    ${!isResolved ? `
-                                        <button onclick="markResolved(${item.id})" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-                                            Mark as Resolved
-                                        </button>
-                                    ` : `
-                                        <button onclick="markOpen(${item.id})" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
-                                            Re-open
-                                        </button>
-                                    `}
+                                <div class="flex gap-4 items-center">
+                                    <a href="item-details.html?id=${item.id}" class="text-primary hover:underline">View Public Page</a>
+                                    
+                                    <div style="margin-left: auto;">
+                                        ${!isResolved ? `
+                                            <button onclick="markResolved(${item.id})" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                                                Mark as Resolved
+                                            </button>
+                                        ` : `
+                                            <button onclick="markOpen(${item.id})" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                                                Re-open
+                                            </button>
+                                        `}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                `;
-            }).join('');
+                    `;
+                }).join('');
+            } catch (e) {
+                grid.innerHTML = '<p class="text-muted">Could not load items. Is the backend running?</p>';
+            }
         }
 
-        function markResolved(id) {
+        async function markResolved(id) {
             if (confirm('Did you find this item or return it to the owner?')) {
-                updateItemStatus(id, 'resolved');
+                await updateItemStatus(id, 'resolved');
                 window.location.reload();
             }
         }
 
-        function markOpen(id) {
-            updateItemStatus(id, 'open');
+        async function markOpen(id) {
+            await updateItemStatus(id, 'open');
             window.location.reload();
         }
 

@@ -85,7 +85,7 @@
                     <input type="text" id="contact" placeholder="How can we reach you?" required>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-block">Submit Report</button>
+                <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Submit Report</button>
             </form>
         </div>
     </main>
@@ -112,39 +112,47 @@
         // Image Preview Handler
         const imageInput = document.getElementById('imageInput');
         const imagePreview = document.getElementById('imagePreview');
-        let base64Image = 'https://via.placeholder.com/400x300?text=No+Image'; // Default
+        let selectedFile = null;
 
         imageInput.addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (file) {
+                selectedFile = file;
                 const reader = new FileReader();
                 reader.onload = function (e) {
-                    base64Image = e.target.result;
-                    imagePreview.querySelector('img').src = base64Image;
+                    imagePreview.querySelector('img').src = e.target.result;
                     imagePreview.style.display = 'block';
                 }
                 reader.readAsDataURL(file);
             }
         });
 
-        // Handle Form Submission
-        document.getElementById('reportForm').addEventListener('submit', function (e) {
+        // Handle Form Submission — sends to backend API
+        document.getElementById('reportForm').addEventListener('submit', async function (e) {
             e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
 
-            const newItem = {
+            const itemData = {
                 type: document.querySelector('input[name="type"]:checked').value,
                 title: document.getElementById('title').value,
                 location: document.getElementById('location').value,
                 date: document.getElementById('date').value,
                 description: document.getElementById('description').value,
                 contact: document.getElementById('contact').value,
-                image: base64Image
+                user: CURRENT_USER,
             };
 
-            addItem(newItem);
-
-            alert('Item reported successfully!');
-            window.location.href = 'index.html';
+            try {
+                await addItem(itemData, selectedFile);
+                alert('Item reported successfully!');
+                window.location.href = 'index.html';
+            } catch (err) {
+                alert('Failed to submit report. Make sure the backend is running.\n' + err.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Report';
+            }
         });
     </script>
 </body>
