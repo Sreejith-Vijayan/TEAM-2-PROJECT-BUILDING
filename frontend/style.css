@@ -1,0 +1,16 @@
+body {
+  font-family: Arial;
+  background-color: #f2f2f2;
+  padding: 20px;
+}
+
+form {
+  background: white;
+  padding: 15px;
+  width: 300px;
+}
+
+input, textarea, button {
+  width: 100%;
+  margin: 5px 0;
+}
