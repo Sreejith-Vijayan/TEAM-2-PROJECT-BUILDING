@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Item - Lost & Found</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container flex justify-between items-center">
+            <a href="index.html" class="nav-brand">Lost & Found</a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="report.html" class="active">Report</a>
+                <a href="view-items.html">View Items</a>
+                <a href="dashboard.html">My Dashboard</a>
+                <button onclick="toggleDarkMode()" class="btn btn-outline" style="padding: 0.5rem;"
+                    title="Toggle Dark Mode">🌙</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container main-content">
+        <div class="card" style="max-width: 600px; margin: 0 auto;">
+            <div class="text-center mb-8">
+                <h2 style="font-size: 1.75rem; margin-bottom: 0.5rem;">Report an Item</h2>
+                <p style="color: var(--text-muted);">Please provide as many details as possible.</p>
+            </div>
+
+            <form id="reportForm">
+
+                <!-- Type Selection -->
+                <div class="form-group">
+                    <label>What are you reporting?</label>
+                    <div class="flex gap-4">
+                        <label class="btn btn-outline flex-1 text-center" style="cursor: pointer;">
+                            <input type="radio" name="type" value="lost" checked
+                                style="width: auto; margin-right: 0.5rem;"> Lost Item
+                        </label>
+                        <label class="btn btn-outline flex-1 text-center" style="cursor: pointer;">
+                            <input type="radio" name="type" value="found" style="width: auto; margin-right: 0.5rem;">
+                            Found Item
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="title">Item Name</label>
+                    <input type="text" id="title" placeholder="e.g. Blue Backpack, iPhone 13" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Location (Lost/Found)</label>
+                    <input type="text" id="location" placeholder="e.g. Library 2nd Floor" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description (Color, Brand, Distinctive Marks)</label>
+                    <textarea id="description" rows="4" placeholder="Describe the item in detail..."
+                        required></textarea>
+                </div>
+
+                <!-- Image Upload -->
+                <div class="form-group">
+                    <label for="imageInput">Upload Image (Optional)</label>
+                    <input type="file" id="imageInput" accept="image/*">
+                    <div id="imagePreview" style="margin-top: 1rem; display: none;">
+                        <img src="" alt="Preview"
+                            style="max-width: 100%; border-radius: var(--radius); max-height: 200px; object-fit: cover;">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="contact">Contact Information (Email/Phone)</label>
+                    <input type="text" id="contact" placeholder="How can we reach you?" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Submit Report</button>
+            </form>
+        </div>
+    </main>
+
+    <footer class="footer text-center">
+        <div class="container">
+            <p>&copy; 2023 Digital Lost & Found System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Handle URL Params to pre-select type
+        const urlParams = new URLSearchParams(window.location.search);
+        const typeParam = urlParams.get('type');
+        if (typeParam) {
+            const radio = document.querySelector(`input[name="type"][value="${typeParam}"]`);
+            if (radio) radio.checked = true;
+        }
+
+        // Set default date to today
+        document.getElementById('date').valueAsDate = new Date();
+
+        // Image Preview Handler
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        let selectedFile = null;
+
+        imageInput.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    imagePreview.querySelector('img').src = e.target.result;
+                    imagePreview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Handle Form Submission — sends to backend API
+        document.getElementById('reportForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            const itemData = {
+                type: document.querySelector('input[name="type"]:checked').value,
+                title: document.getElementById('title').value,
+                location: document.getElementById('location').value,
+                date: document.getElementById('date').value,
+                description: document.getElementById('description').value,
+                contact: document.getElementById('contact').value,
+                user: CURRENT_USER,
+            };
+
+            try {
+                await addItem(itemData, selectedFile);
+                alert('Item reported successfully!');
+                window.location.href = 'index.html';
+            } catch (err) {
+                alert('Failed to submit report. Make sure the backend is running.\n' + err.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Report';
+            }
+        });
+    </script>
+</body>
+
+</html>

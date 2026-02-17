@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Item Details - Lost & Found</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container flex justify-between items-center">
+            <a href="index.html" class="nav-brand">Lost & Found</a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="report.html">Report</a>
+                <a href="view-items.html">View Items</a>
+                <a href="dashboard.html">My Dashboard</a>
+                <button onclick="toggleDarkMode()" class="btn btn-outline" style="padding: 0.5rem;"
+                    title="Toggle Dark Mode">🌙</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container main-content">
+        <div class="mb-4">
+            <a href="javascript:history.back()" style="color: var(--text-muted);">&larr; Back to List</a>
+        </div>
+
+        <div id="loading" class="text-center" style="padding: 4rem 0;">
+            <p>Loading item details...</p>
+        </div>
+
+        <div id="item-container" class="card" style="max-width: 800px; margin: 0 auto; display: none;">
+            <div class="grid grid-cols-2" style="grid-template-columns: 1fr 1fr; gap: 2rem;">
+
+                <!-- Image Section -->
+                <div>
+                    <img id="item-image" src="" alt="Item Image"
+                        style="width: 100%; border-radius: var(--radius); object-fit: cover; height: 100%; max-height: 400px;">
+                </div>
+
+                <!-- Details Section -->
+                <div>
+                    <div class="flex justify-between items-start mb-4">
+                        <span id="item-badge" class="badge"></span>
+                        <div class="text-right">
+                            <span id="resolved-badge" class="badge badge-found"
+                                style="background-color: #94a3b8; color: white; display: none;">RESOLVED</span>
+                            <div id="item-date"
+                                style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;"></div>
+                        </div>
+                    </div>
+
+                    <h1 id="item-title" style="font-size: 2rem; margin-bottom: 1rem; line-height: 1.2;"></h1>
+
+                    <div style="margin-bottom: 1.5rem;">
+                        <h3 style="font-size: 1rem; color: var(--text-muted); margin-bottom: 0.25rem;">Location</h3>
+                        <p id="item-location" style="font-size: 1.1rem; font-weight: 500;"></p>
+                    </div>
+
+                    <div style="margin-bottom: 2rem;">
+                        <h3 style="font-size: 1rem; color: var(--text-muted); margin-bottom: 0.25rem;">Description</h3>
+                        <p id="item-description" style="color: var(--text-main); line-height: 1.6;"></p>
+                    </div>
+
+                    <div id="contact-card" class="card" style="background-color: var(--background); border: none;">
+                        <h3 style="font-size: 1rem; margin-bottom: 0.5rem;">Contact Information</h3>
+                        <p id="item-contact" style="font-weight: 600; font-size: 1.1rem; color: var(--primary);"></p>
+                        <a id="contact-btn" href="#" class="btn btn-primary btn-block mt-4">Contact Reporter</a>
+                    </div>
+
+                    <div id="resolved-message"
+                        style="display: none; padding: 1rem; background-color: #f1f5f9; border-radius: var(--radius); text-align: center; color: var(--text-muted);">
+                        This item has been marked as resolved/returned. Contact information is hidden.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 404 State -->
+        <div id="not-found" class="text-center" style="display: none; padding: 4rem 0;">
+            <h2 style="font-size: 2rem; margin-bottom: 1rem;">Item Not Found</h2>
+            <p>The item you are looking for does not exist or has been removed.</p>
+            <a href="index.html" class="btn btn-primary mt-4">Go Home</a>
+        </div>
+    </main>
+
+    <footer class="footer text-center">
+        <div class="container">
+            <p>&copy; 2023 Digital Lost & Found System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const itemId = urlParams.get('id');
+
+        const container = document.getElementById('item-container');
+        const notFound = document.getElementById('not-found');
+        const loading = document.getElementById('loading');
+
+        async function loadItemDetails() {
+            if (!itemId) {
+                loading.style.display = 'none';
+                notFound.style.display = 'block';
+                return;
+            }
+
+            try {
+                const item = await getItemById(itemId);
+
+                if (!item) {
+                    loading.style.display = 'none';
+                    notFound.style.display = 'block';
+                    return;
+                }
+
+                // Populate Data
+                document.getElementById('item-title').textContent = item.title;
+                document.getElementById('item-date').textContent = 'Reported on ' + item.date;
+                document.getElementById('item-location').textContent = item.location;
+                document.getElementById('item-description').textContent = item.description;
+
+                // Image
+                const img = document.getElementById('item-image');
+                img.src = getPhotoUrl(item);
+
+                // Badge
+                const badge = document.getElementById('item-badge');
+                badge.textContent = item.type.toUpperCase();
+                badge.className = `badge ${item.type === 'lost' ? 'badge-lost' : 'badge-found'}`;
+
+                // Status Handling
+                if (item.status === 'resolved') {
+                    document.getElementById('resolved-badge').style.display = 'inline-block';
+                    document.getElementById('contact-card').style.display = 'none';
+                    document.getElementById('resolved-message').style.display = 'block';
+                } else {
+                    document.getElementById('item-contact').textContent = item.contact;
+                    const contactBtn = document.getElementById('contact-btn');
+                    contactBtn.href = `mailto:${item.contact}?subject=Regarding: ${item.title}`;
+                }
+
+                // Show Container
+                loading.style.display = 'none';
+                container.style.display = 'block';
+
+                // Responsive Grid fix for mobile
+                if (window.innerWidth < 768) {
+                    container.querySelector('.grid').style.gridTemplateColumns = '1fr';
+                }
+            } catch (e) {
+                loading.style.display = 'none';
+                notFound.style.display = 'block';
+            }
+        }
+
+        loadItemDetails();
+    </script>
+</body>
+
+</html>

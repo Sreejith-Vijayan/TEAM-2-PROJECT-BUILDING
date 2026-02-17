@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost & Found - Home</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container flex justify-between items-center">
+            <a href="index.html" class="nav-brand">Lost & Found</a>
+            <div class="nav-links">
+                <a href="index.html" class="active">Home</a>
+                <a href="report.html">Report</a>
+                <a href="view-items.html">View Items</a>
+                <a href="dashboard.html">My Dashboard</a>
+                <button onclick="toggleDarkMode()" class="btn btn-outline" style="padding: 0.5rem;"
+                    title="Toggle Dark Mode">🌙</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header
+        style="background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; padding: 4rem 0; margin-bottom: 3rem;">
+        <div class="container text-center">
+            <h1 style="font-size: 3rem; margin-bottom: 1rem;">Reuniting People with Their Belongings</h1>
+            <p style="font-size: 1.25rem; opacity: 0.9; margin-bottom: 2rem;">The easiest way to report lost items and
+                find what you're missing.</p>
+            <div class="flex justify-center gap-4">
+                <a href="report.html?type=lost" class="btn btn-danger" style="font-size: 1.1rem; padding: 1rem 2rem;">I
+                    Lost Something</a>
+                <a href="report.html?type=found" class="btn btn-secondary"
+                    style="font-size: 1.1rem; padding: 1rem 2rem;">I Found Something</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Dashboard Content -->
+    <main class="container main-content">
+
+        <!-- Found Items Section -->
+        <section class="mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 style="font-size: 1.5rem; color: var(--secondary);">Recently Found</h2>
+                <a href="view-items.html?filter=found" class="btn btn-outline" style="font-size: 0.875rem;">View All
+                    Found</a>
+            </div>
+            <div class="grid grid-cols-3" id="found-items-container">
+                <p class="text-muted">Loading...</p>
+            </div>
+        </section>
+
+        <!-- Lost Items Section -->
+        <section>
+            <div class="flex justify-between items-center mb-4">
+                <h2 style="font-size: 1.5rem; color: var(--danger);">Recently Missing</h2>
+                <a href="view-items.html?filter=lost" class="btn btn-outline" style="font-size: 0.875rem;">View All
+                    Missing</a>
+            </div>
+            <div class="grid grid-cols-3" id="lost-items-container">
+                <p class="text-muted">Loading...</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer text-center">
+        <div class="container">
+            <p>&copy; 2023 Digital Lost & Found System. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Load recent items for dashboard
+        document.addEventListener('DOMContentLoaded', async () => {
+            const foundContainer = document.getElementById('found-items-container');
+            const lostContainer = document.getElementById('lost-items-container');
+
+            try {
+                const foundItems = await getItemsByType('found');
+                const lostItems = await getItemsByType('lost');
+
+                const recentFound = foundItems.slice(0, 3);
+                const recentLost = lostItems.slice(0, 3);
+
+                function createCard(item) {
+                    const badgeClass = item.type === 'lost' ? 'badge-lost' : 'badge-found';
+                    return `
+                        <div class="card">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="badge ${badgeClass}">${item.type.toUpperCase()}</span>
+                                <span style="font-size: 0.875rem; color: var(--text-muted);">${item.date}</span>
+                            </div>
+                            <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">${item.title}</h3>
+                            <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">
+                                Location: <strong>${item.location}</strong>
+                            </p>
+                            <a href="item-details.html?id=${item.id}" class="btn btn-outline btn-block">View Details</a>
+                        </div>
+                    `;
+                }
+
+                foundContainer.innerHTML = recentFound.map(createCard).join('');
+                lostContainer.innerHTML = recentLost.map(createCard).join('');
+
+                if (recentFound.length === 0) foundContainer.innerHTML = '<p class="text-muted">No found items reported yet.</p>';
+                if (recentLost.length === 0) lostContainer.innerHTML = '<p class="text-muted">No lost items reported yet.</p>';
+            } catch (e) {
+                foundContainer.innerHTML = '<p class="text-muted">Could not load items. Is the backend running?</p>';
+                lostContainer.innerHTML = '<p class="text-muted">Could not load items. Is the backend running?</p>';
+            }
+        });
+    </script>
+</body>
+
+</html>

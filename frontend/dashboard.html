@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard - Lost & Found</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .status-select {
+            padding: 0.5rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container flex justify-between items-center">
+            <a href="index.html" class="nav-brand">Lost & Found</a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="report.html">Report</a>
+                <a href="view-items.html">View Items</a>
+                <a href="dashboard.html" class="active">My Dashboard</a>
+                <button onclick="toggleDarkMode()" class="btn btn-outline" style="padding: 0.5rem;">🌙</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container main-content">
+        <div class="mb-8 flex justify-between items-center">
+            <div>
+                <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">My Dashboard</h2>
+                <p style="color: var(--text-muted);">Manage your reported items</p>
+            </div>
+            <div class="p-4 bg-white rounded shadow-sm border border-slate-200">
+                <p class="text-sm text-muted">Logged in as:</p>
+                <p style="font-weight: 600; color: var(--primary);">student1@example.com</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1" id="my-items-grid">
+            <p class="text-muted">Loading your items...</p>
+        </div>
+
+        <div id="no-results" class="text-center text-muted" style="display: none; padding: 4rem;">
+            <p>You haven't reported any items yet.</p>
+            <a href="report.html" class="btn btn-primary mt-4">Report an Item</a>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        const grid = document.getElementById('my-items-grid');
+        const noResults = document.getElementById('no-results');
+
+        async function renderMyItems() {
+            try {
+                const myItems = await getItemsByUser(CURRENT_USER);
+
+                if (myItems.length === 0) {
+                    grid.style.display = 'none';
+                    noResults.style.display = 'block';
+                    return;
+                }
+
+                grid.innerHTML = myItems.map(item => {
+                    const badgeClass = item.status === 'resolved' ? 'badge-found' : (item.type === 'lost' ? 'badge-lost' : 'badge-found');
+                    const badgeText = item.status === 'resolved' ? 'RESOLVED' : item.type.toUpperCase();
+                    const isResolved = item.status === 'resolved';
+
+                    return `
+                        <div class="card flex flex-col md:flex-row gap-4 items-start">
+                            <img src="${getPhotoUrl(item)}" style="width: 150px; height: 150px; object-fit: cover; border-radius: var(--radius);">
+                            
+                            <div style="flex: 1;">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 style="font-size: 1.5rem;">${item.title}</h3>
+                                    <span class="badge ${badgeClass}">${badgeText}</span>
+                                </div>
+                                <p style="color: var(--text-muted); margin-bottom: 0.5rem;">Reported on ${item.date} • ${item.location}</p>
+                                <p style="margin-bottom: 1rem;">${item.description}</p>
+                                
+                                <div class="flex gap-4 items-center">
+                                    <a href="item-details.html?id=${item.id}" class="text-primary hover:underline">View Public Page</a>
+                                    
+                                    <div style="margin-left: auto;">
+                                        ${!isResolved ? `
+                                            <button onclick="markResolved(${item.id})" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                                                Mark as Resolved
+                                            </button>
+                                        ` : `
+                                            <button onclick="markOpen(${item.id})" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                                                Re-open
+                                            </button>
+                                        `}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                grid.innerHTML = '<p class="text-muted">Could not load items. Is the backend running?</p>';
+            }
+        }
+
+        async function markResolved(id) {
+            if (confirm('Did you find this item or return it to the owner?')) {
+                await updateItemStatus(id, 'resolved');
+                window.location.reload();
+            }
+        }
+
+        async function markOpen(id) {
+            await updateItemStatus(id, 'open');
+            window.location.reload();
+        }
+
+        renderMyItems();
+    </script>
+</body>
+
+</html>
