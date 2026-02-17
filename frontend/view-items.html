@@ -1,21 +1,181 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-  <title>View Items</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View Items - Lost & Found</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .filters {
+      margin-bottom: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .filter-btn {
+      background: white;
+      border: 1px solid var(--border);
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .filter-btn.active {
+      background-color: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+  </style>
 </head>
+
 <body>
 
-<h2>Lost Items</h2>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="container flex justify-between items-center">
+      <a href="index.html" class="nav-brand">Lost & Found</a>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="report.html">Report</a>
+        <a href="view-items.html" class="active">View Items</a>
+        <a href="dashboard.html">My Dashboard</a>
+        <button onclick="toggleDarkMode()" class="btn btn-outline" style="padding: 0.5rem;"
+          title="Toggle Dark Mode">🌙</button>
+      </div>
+    </div>
+  </nav>
 
-<ul>
-  <li>Wallet - Library</li>
-  <li>Mobile - Canteen</li>
-  <li>ID Card - Gate</li>
-</ul>
+  <main class="container main-content">
+    <div class="mb-8 text-center">
+      <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">Browse Items</h2>
+      <p style="color: var(--text-muted);">Search through reported lost and found items</p>
+    </div>
 
-<br>
-<a href="index.html">Back to Home</a>
+    <!-- Filter & Search -->
+    <div class="filters flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex gap-2">
+        <button class="filter-btn active" data-filter="all">All Items</button>
+        <button class="filter-btn" data-filter="lost">Lost</button>
+        <button class="filter-btn" data-filter="found">Found</button>
+      </div>
+      <div style="position: relative; width: 100%; max-width: 300px;">
+        <input type="text" id="searchInput" placeholder="Search items..." style="padding-right: 2.5rem;">
+        <span
+          style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);">🔍</span>
+      </div>
+    </div>
 
+    <!-- Items Grid -->
+    <div class="grid grid-cols-2" id="items-grid">
+      <!-- Items injected here -->
+    </div>
+
+    <div id="no-results" class="text-center text-muted" style="display: none; padding: 2rem;">
+      <p>No items found matching your criteria.</p>
+    </div>
+
+  </main>
+
+  <footer class="footer text-center">
+    <div class="container">
+      <p>&copy; 2023 Digital Lost & Found System. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    const grid = document.getElementById('items-grid');
+    const noResults = document.getElementById('no-results');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const searchInput = document.getElementById('searchInput');
+
+    let currentFilter = 'all';
+    let searchQuery = '';
+
+    // Check URL params for initial filter
+    const urlParams = new URLSearchParams(window.location.search);
+    const filterParam = urlParams.get('filter');
+    if (filterParam) {
+      currentFilter = filterParam;
+      updateActiveButton(filterParam);
+    }
+
+    function updateActiveButton(filter) {
+      filterBtns.forEach(btn => {
+        if (btn.dataset.filter === filter) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+    }
+
+    function renderItems() {
+      let items = getItemsByType('all');
+
+      // Apply Type Filter
+      if (currentFilter !== 'all') {
+        items = items.filter(item => item.type === currentFilter);
+      }
+
+      // Apply Search Filter
+      if (searchQuery) {
+        const lowerQuery = searchQuery.toLowerCase();
+        items = items.filter(item =>
+          item.title.toLowerCase().includes(lowerQuery) ||
+          item.description.toLowerCase().includes(lowerQuery) ||
+          item.location.toLowerCase().includes(lowerQuery)
+        );
+      }
+
+      // Render
+      grid.innerHTML = items.map(item => {
+        const badgeClass = item.type === 'lost' ? 'badge-lost' : 'badge-found';
+        return `
+                    <div class="card">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="badge ${badgeClass}">${item.type.toUpperCase()}</span>
+                            <span style="font-size: 0.875rem; color: var(--text-muted);">${item.date}</span>
+                        </div>
+                        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">${item.title}</h3>
+                        <p style="color: var(--text-muted); margin-bottom: 0.5rem; font-size: 0.9rem;">
+                            <strong>Location:</strong> ${item.location}
+                        </p>
+                        <p style="margin-bottom: 1.5rem; color: #4b5563;">${item.description}</p>
+                        <div class="flex gap-2">
+                             <a href="item-details.html?id=${item.id}" class="btn btn-outline flex-1" style="font-size: 0.875rem;">View Details</a>
+                        </div>
+                    </div>
+                `;
+      }).join('');
+
+      // Show/Hide No Results
+      if (items.length === 0) {
+        grid.style.display = 'none';
+        noResults.style.display = 'block';
+      } else {
+        grid.style.display = 'grid';
+        noResults.style.display = 'none';
+      }
+    }
+
+    // Event Listeners
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentFilter = btn.dataset.filter;
+        updateActiveButton(currentFilter);
+        renderItems();
+      });
+    });
+
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      renderItems();
+    });
+
+    // Initial Render
+    renderItems();
+  </script>
 </body>
+
 </html>

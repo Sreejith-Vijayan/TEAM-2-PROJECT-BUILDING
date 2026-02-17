@@ -1,54 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>Login Page</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Lost & Found</title>
+    <link rel="stylesheet" href="style.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f2f2f2;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         }
-        .login-box {
-            width: 300px;
-            margin: 100px auto;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 0 10px gray;
-        }
-        h2 {
-            text-align: center;
-        }
-        input {
+
+        .login-card {
             width: 100%;
-            padding: 8px;
-            margin: 8px 0;
-        }
-        button {
-            width: 100%;
-            padding: 8px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
+            max-width: 400px;
         }
     </style>
 </head>
 
 <body>
 
-<div class="login-box">
-    <h2>Login</h2>
+    <div class="card login-card">
+        <div class="text-center mb-8">
+            <h2 style="color: var(--primary); margin-bottom: 0.5rem;">Welcome Back</h2>
+            <p style="color: var(--text-muted);">Please login to your account</p>
+        </div>
 
-    <form>
-        <label>Email</label>
-        <input type="email" placeholder="Enter email" required>
+        <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="student@college.edu" required>
+            </div>
 
-        <label>Password</label>
-        <input type="password" placeholder="Enter password" required>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
 
-        <button type="submit">Login</button>
-    </form>
-</div>
+            <div class="flex justify-between items-center mb-4">
+                <label class="flex items-center" style="font-size: 0.9rem; font-weight: 400;">
+                    <input type="checkbox" style="width: auto; margin-right: 0.5rem;"> Remember me
+                </label>
+                <a href="#" style="font-size: 0.9rem; color: var(--primary);">Forgot Password?</a>
+            </div>
 
+            <button type="submit" class="btn btn-primary btn-block">Login</button>
+        </form>
+
+        <div class="text-center mt-4">
+            <p style="font-size: 0.9rem;">
+                Don't have an account? <a href="#" style="color: var(--primary); font-weight: 600;">Register</a>
+            </p>
+            <br>
+            <a href="index.html" style="font-size: 0.9rem; color: var(--text-muted);">Back to Home</a>
+        </div>
+    </div>
+
+    <script>
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            if (email) {
+                // Mock login success using simple alert or redirection
+                // In a real app, this would hit an API
+                localStorage.setItem('user_email', email);
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
 </body>
+
 </html>
