@@ -164,7 +164,7 @@ def create_item():
             photo.save(dest)
             photo_path = unique_name
 
-        # Generate embedding
+        # Generate embedding (dummy now)
         combined_text = f"{title}. {description}. Found at {location}"
         embedding = generate_embedding(combined_text)
 
@@ -186,6 +186,11 @@ def create_item():
         db.refresh(db_item)
 
         return jsonify(item_to_dict(db_item)), 201
+    except Exception as e:
+        print(f"Error creating item: {e}")
+        # sys.stdout.flush() if feasible, but print usually works with our previous fix
+        db.rollback()
+        return jsonify({"detail": str(e)}), 500
     finally:
         db.close()
 
