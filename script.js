@@ -6,6 +6,10 @@
 const API_BASE = 'https://lostnfound-backend-pzcy.onrender.com';
 const CURRENT_USER = localStorage.getItem('user_email') || ''; // Read logged-in user
 
+if (!CURRENT_USER && !window.location.pathname.includes('login.html')) {
+    window.location.href = 'login.html';
+}
+
 // ================================================
 // API Helper
 // ================================================
